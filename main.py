@@ -18,7 +18,9 @@ def get_project_name():
     with open("Cargo.toml") as f:
         for line in f:
             if line.startswith("name"):
-                return line.split("=")[1].strip()[1:-1]
+                name = line.split("=")[1].strip()[1:-1]
+                name = name.replace("-", "_")
+                return name
     return None
 
 
