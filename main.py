@@ -1,23 +1,47 @@
 #!/bin/python3
-from subprocess import PIPE, run
-from threading import Thread
+from subprocess import PIPE, run, Popen
+from threading import Thread, Event
 from sys import argv
 
+event = Event()
 
 def run_server(port):
     cmd = ["npx", "serve", "-n", "-p", str(port), "./target/doc"]
-    run(cmd, stdout=PIPE, universal_newlines=True)
+    server = Popen(cmd, stdout=PIPE, universal_newlines=True)
+    event.wait()
+    server.kill()
+    
+    
+
+
+def get_project_name():
+    with open("Cargo.toml") as f:
+        for line in f:
+            if line.startswith("name"):
+                return line.split("=")[1].strip()[1:-1]
+    return None
 
 
 def main():
     port = argv[1] if len(argv) > 1 else 2048
-    Thread(target=run_server, args=(port,)).start()
+    server = Thread(target=run_server, args=(port,))
+    server.start()
+
+    project_name = get_project_name()
     color = "\033[92m"
-    print(f"Server running at {color}http://localhost:{port}\n")
+    no_color = "\033[0m"
+    print(f"Server running at {color}http://localhost:{port}{no_color}")
+    if project_name:
+        print(f"Project docs at {color}http://localhost:{port}/{project_name}{no_color}\n")
+    
     c = ""
     while c != "q":
         run(["cargo", "doc"])
-        c = input("Reload? (q to quit) ")
+        c = input("Reload? (q to quit) ").strip()
+    print("Shutting down...")
+    event.set()
+    server.join()
+    
 
  
 if __name__ == "__main__":
