@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/bin/env python3
 from subprocess import PIPE, run, Popen
 from threading import Thread, Event
 from sys import argv
